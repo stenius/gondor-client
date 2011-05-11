@@ -10,6 +10,7 @@ import time
 import urllib
 import urllib2
 import zlib
+import git_archive_all
 
 try:
     import simplejson as json
@@ -165,8 +166,11 @@ def cmd_deploy(args, config):
             sha = utils.check_output("git rev-parse %s" % commit).strip()
             if commit == "HEAD":
                 commit = sha
-            tarball = os.path.abspath(os.path.join(repo_root, "%s-%s.tar.gz" % (label, sha)))
-            cmd = "(cd %s && git archive --format=tar %s | gzip > %s)" % (repo_root, commit, tarball)
+            tarball = os.path.abspath(os.path.join(repo_root, "%s-%s.tar" % (label, sha)))
+            git_archive_all.archive_git(tarball,'tar',repo_root)
+            cmd = "(cd %s && gzip %s)" % (repo_root, tarball)
+            tarball += '.gz'
+            
         elif vcs == "hg":
             try:
                 repo_root = utils.find_nearest(os.getcwd(), ".hg")
@@ -218,7 +222,6 @@ def cmd_deploy(args, config):
         else:
             out("\n")
             data = json.loads(response.read())
-    
     finally:
         if tarball:
             os.unlink(tarball)
